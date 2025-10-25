@@ -55,7 +55,7 @@
     - name: Start the container
       docker_container:
         name: ansibleapp
-        image: "ruqiyataj/repo1:latest"
+        image: "ruqiyataj/img1:latest"
         state: started
         published_ports:
           - "0.0.0.0:8080:8080"
