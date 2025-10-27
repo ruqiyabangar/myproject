@@ -2,6 +2,20 @@
 - hosts: dev
   become: true
   tasks:
+    - name: Install required packages
+      yum:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+          - curl
+        state: present
+
+    - name: Add Docker repository
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+
     - name: Install Docker
       yum:
         name: docker-ce
@@ -30,6 +44,8 @@
         state: started
         published_ports:
           - "0.0.0.0:8080:8080"
+
+
 
 
 
