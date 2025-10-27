@@ -1,45 +1,27 @@
 ---
 - hosts: dev
-  become: true
+  become: True
   tasks:
-    - name: Install required packages
+    - name: Install python pip
       yum:
-        name:
-          - yum-utils
-          - device-mapper-persistent-data
-          - lvm2
-          - curl
+        name: python-pip
         state: present
-
-    - name: Add Docker repository
-      get_url:
-        url: https://download.docker.com/linux/centos/docker-ce.repo
-        dest: /etc/yum.repos.d/docker-ce.repo
-
-    - name: Install Docker
+    - name: Install docker
       yum:
-        name: docker-ce
+        name: docker
         state: present
-
-    - name: Ensure Docker service is started and enabled
+    - name: start docker
       service:
         name: docker
         state: started
         enabled: yes
-
-    - name: Install pip for Python 3
-      yum:
-        name: python3-pip
-        state: present
-
-    - name: Install docker Python module
+    - name: Install docker-py python module
       pip:
-        name: docker
-        executable: pip3
-
+        name: docker-py
+        state: present
     - name: Start the container
       docker_container:
-        name: ansibleapp
+        name: ansibleappc2
         image: "ruqiyataj/img1:latest"
         state: started
         published_ports:
