@@ -1,37 +1,6 @@
 ---
-- hosts: dev
-  become: true
-  tasks:
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-
-    - name: Install dependencies for Docker
-      apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - software-properties-common
-        state: present
-
-    - name: Add Docker GPG key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: Add Docker repository
-      apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
-        state: present
-        filename: docker
-
-    - name: Update apt cache after adding Docker repo
-      apt:
-        update_cache: yes
-
-    - name: Install Docker
-      apt:
+ - name: Install Docker
+      yum:
         name: docker-ce
         state: present
 
@@ -42,7 +11,7 @@
         enabled: yes
 
     - name: Install pip for Python 3
-      apt:
+      yum:
         name: python3-pip
         state: present
 
@@ -50,7 +19,6 @@
       pip:
         name: docker
         executable: pip3
-        extra_args: --break-system-packages
 
     - name: Start the container
       docker_container:
@@ -59,3 +27,4 @@
         state: started
         published_ports:
           - "0.0.0.0:8080:8080"
+
