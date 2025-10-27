@@ -1,5 +1,8 @@
 ---
- - name: Install Docker
+- hosts: dev
+  become: true
+  tasks:
+    - name: Install Docker
       yum:
         name: docker-ce
         state: present
@@ -27,4 +30,6 @@
         state: started
         published_ports:
           - "0.0.0.0:8080:8080"
+
+
 
