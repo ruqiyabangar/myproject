@@ -36,9 +36,13 @@
     - name: Pull latest Docker image
       command: docker pull ruqiyataj/img1:latest
 
-    - name: Remove old container if running
-      command: docker rm -f myapp
-      ignore_errors: yes
+    - name: Free up port 8080 if occupied
+  shell: |
+    if docker ps --format '{{.Ports}}' | grep -q '0.0.0.0:8080'; then
+      docker ps --filter "publish=8080" -q | xargs -r docker stop
+      docker ps -a --filter "publish=8080" -q | xargs -r docker rm
+    fi
+  ignore_errors: yes
 
     - name: Run new container
       command: docker run -d --name myapp -p 8080:8080 ruqiyataj/img1:latest
