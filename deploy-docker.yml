@@ -1,50 +1,35 @@
 ---
-- name: Deploy Docker Container
+- name: Deploy Docker container
   hosts: all
   become: yes
+
   tasks:
-    - name: Remove old Docker if exists
+    - name: Ensure Docker is installed
       yum:
         name: docker
-        state: absent
-
-    - name: Install required packages
-      yum:
-        name:
-          - yum-utils
-          - device-mapper-persistent-data
-          - lvm2
         state: present
 
-    - name: Add Docker repo
-      command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-
-    - name: Install Docker
-      yum:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-        state: present
-
-    - name: Start and enable Docker
+    - name: Start Docker service
       service:
         name: docker
         state: started
         enabled: yes
 
-    - name: Pull latest Docker image
-      command: docker pull ruqiyataj/img1:latest
+    - name: Remove old container if running
+      shell: |
+        docker rm -f myapp || true
+      ignore_errors: yes
 
     - name: Free up port 8080 if occupied
-  shell: |
-    if docker ps --format '{{.Ports}}' | grep -q '0.0.0.0:8080'; then
-      docker ps --filter "publish=8080" -q | xargs -r docker stop
-      docker ps -a --filter "publish=8080" -q | xargs -r docker rm
-    fi
-  ignore_errors: yes
+      shell: |
+        if docker ps --format '{{.Ports}}' | grep -q '0.0.0.0:8080'; then
+          docker ps --filter "publish=8080" -q | xargs -r docker stop
+          docker ps -a --filter "publish=8080" -q | xargs -r docker rm
+        fi
+      ignore_errors: yes
+
+    - name: Pull latest image from Docker Hub
+      shell: docker pull ruqiyataj/img1:latest
 
     - name: Run new container
-      command: docker run -d --name myapp -p 8080:8080 ruqiyataj/img1:latest
-
-        
+      shell: docker run -d --name myapp -p 8080:8080 ruqiyataj/img1:latest
