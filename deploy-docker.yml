@@ -1,42 +1,33 @@
 ---
-- hosts: dev
+- hosts: all
   become: yes
   tasks:
-    - name: Install required packages
+    - name: Install Docker if not installed
       yum:
-        name: yum-utils
+        name: docker
         state: present
 
-    - name: Add Docker repo
-      command: >
-        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-      args:
-        creates: /etc/yum.repos.d/docker-ce.repo
-
-    - name: Install Docker
-      yum:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-        state: present
-
-    - name: Start and enable Docker service
+    - name: Ensure Docker service is running
       service:
         name: docker
         state: started
         enabled: yes
-- name: Stop existing container (if running)
-  shell: |
-    docker ps -q --filter "publish=8080" | xargs -r docker stop
-    docker ps -aq --filter "publish=8080" | xargs -r docker rm
-  ignore_errors: yes
 
-- name: Pull and run the Docker image
-  shell: |
-    docker pull ruqiyataj/img1:latest
-    docker run -d -p 8080:8080 ruqiyataj/img1:latest
-    - name: Pull and run the Docker image
+    - name: Stop existing container (if running)
       shell: |
-        docker pull ruqiyataj/img1:latest
-        docker run -d -p 8080:8080 ruqiyataj/img1:latest
+        docker ps -q --filter "publish=8080" | xargs -r docker stop
+        docker ps -aq --filter "publish=8080" | xargs -r docker rm
+      ignore_errors: yes
+
+    - name: Pull latest Docker image
+      shell: docker pull ruqiyataj/img1:latest
+
+    - name: Run new Docker container
+      shell: docker run -d -p 8080:8080 ruqiyataj/img1:latest
+
+    - name: Verify deployment
+      shell: docker ps
+      register: docker_output
+
+    - debug:
+        var: docker_output.stdout_lines
