@@ -26,7 +26,16 @@
         name: docker
         state: started
         enabled: yes
+- name: Stop existing container (if running)
+  shell: |
+    docker ps -q --filter "publish=8080" | xargs -r docker stop
+    docker ps -aq --filter "publish=8080" | xargs -r docker rm
+  ignore_errors: yes
 
+- name: Pull and run the Docker image
+  shell: |
+    docker pull ruqiyataj/img1:latest
+    docker run -d -p 8080:8080 ruqiyataj/img1:latest
     - name: Pull and run the Docker image
       shell: |
         docker pull ruqiyataj/img1:latest
