@@ -1,61 +1,35 @@
---
-- hosts: dev
-  become: true
+---
+- name: Deploy Docker container
+  hosts: dev
+  become: yes
+
   tasks:
-    - name: Update yum cache
+    - name: Ensure Docker is installed
       yum:
-        update_cache: yes
-
-    - name: Install dependencies for Docker
-      yum:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - software-properties-common
+        name: docker
         state: present
 
-    - name: Add Docker GPG key
-      yum_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: Add Docker repository
-      yum_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
-        state: present
-        filename: docker
-
-    - name: Update yum cache after adding Docker repo
-      yum:
-        update_cache: yes
-
-    - name: Install Docker
-      yum:
-        name: docker-ce
-        state: present
-
-    - name: Ensure Docker service is started and enabled
+    - name: Start Docker service
       service:
         name: docker
         state: started
         enabled: yes
 
-    - name: Install pip for Python 3
-     yum:
-        name: python3-pip
-        state: present
+    - name: Remove old container if running
+      shell: |
+        docker rm -f myapp || true
+      ignore_errors: yes
 
-    - name: Install docker Python module
-      pip:
-        name: docker
-        executable: pip3
-        extra_args: --break-system-packages
+    - name: Free up port 8080 if occupied
+      shell: |
+        if docker ps --format '{{.Ports}}' | grep -q '0.0.0.0:8080'; then
+          docker ps --filter "publish=8080" -q | xargs -r docker stop
+          docker ps -a --filter "publish=8080" -q | xargs -r docker rm
+        fi
+      ignore_errors: yes
 
-    - name: Start the container
-      docker_container:
-        name: ansibleappc1
-        image: "ruqiyataj/img1:latest"
-        state: started
-        published_ports:
-          - "0.0.0.0:8080:8080"
+    - name: Pull latest image from Docker Hub
+      shell: docker pull ruqiyataj/img1:latest
+
+    - name: Run new container
+      shell: docker run -d --name myapp -p 8080:8080 ruqiyataj/img1:latest
